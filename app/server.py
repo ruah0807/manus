@@ -25,7 +25,9 @@ from app.tools.text_editor import text_editor
 from app.types.messages import BrowserActionRequest, BrowserActionResponse, TerminalApiResponse, TerminalWriteApiRequest, TextEditorAction, TextEditorActionResult
 
 app = FastAPI()
+
 app.router.route_class = TimedRoute
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,17 +45,18 @@ MULTIPART_THRESHOLD = 10485760  # 10MB
 @app.post("/file/upload_to_s3")
 async def upload_file(cmd: FileUploadRequest = Body()):
     """
-    Upload a file to S3. If file size exceeds threshold, return size information instead.
+S3에 파일을 업로드합니다. 파일 크기가 임계값을 초과하면 크기 정보를 반환합니다.
 
-    Request body:
-    {
-        "file_path": str,         # The local file path to upload
-        "presigned_url": str      # The presigned URL to upload to
-    }
-
-    Returns:
-    - For small files: Uploads the file and returns success response
-    - For large files: Returns file information for multipart upload
+요청 본문:
+```
+{
+    "file_path": str,         # 업로드할 로컬 파일 경로
+    "presigned_url": str      # 업로드할 presigned URL
+}
+```
+반환값:
+- 작은 파일의 경우: 파일을 업로드하고 성공 응답을 반환
+- 큰 파일의 경우: 멀티파트 업로드를 위한 파일 정보 반환
     """
     try:
         file_path = Path(cmd.file_path).resolve()
@@ -109,20 +112,22 @@ async def upload_file(cmd: FileUploadRequest = Body()):
 @app.post("/file/multipart_upload_to_s3")
 async def multipart_upload(cmd: MultipartUploadRequest = Body(...)):
     """
-    使用预签名URLs上传文件分片  # Upload file chunks using presigned URLs
-    
-    Request body:
-    {
-        "file_path": str,              # 要上传的文件路径  # File path to upload
-        "presigned_urls": [            # 预签名URL列表  # List of presigned URLs
-            {
-                "part_number": int,    # 分片编号（从1开始）  # Part number (starting from 1)
-                "url": str             # 该分片的预签名URL  # Presigned URL for this part
-            },
-            ...
-        ],
-        "part_size": int              # 每个分片的大小（字节）  # Size of each part in bytes
-    }
+presigned URL을 사용하여 파일 청크 업로드
+
+Request body:
+```
+{
+    "file_path": str,              # 업로드할 파일 경로
+    "presigned_urls": [            # presigned URL 목록
+        {
+            "part_number": int,    # 파트 번호 (1부터 시작)
+            "url": str             # 해당 파트의 presigned URL
+        },
+        ...
+    ],
+    "part_size": int              # 각 파트의 크기 (바이트)
+}
+```
     """
     try:
         print("1")
@@ -206,6 +211,7 @@ async def batch_download(cmd: DownloadRequest):
     """
     Batch download files endpoint
     Request body:
+    ```
     {
         "files": [
             {
@@ -216,6 +222,7 @@ async def batch_download(cmd: DownloadRequest):
         ],
         "folder": "optional/subfolder/path"  # Optional folder to save files /home/ubuntu/upload/optional/subfolder/
     }
+    ```
     """
     try:
         results = []
@@ -276,7 +283,7 @@ browser_manager = BrowserManager()
 
 @app.get("/browser/status")
 async def browser_status():
-    """Endpoint for browser status"""
+    """브라우저 자동화 시스템의 상태를 확인하는 헬스체크(Health Check) API"""
     try:
         tabs = await browser_manager.health_check()
         return {"healthy": True, "tabs": tabs}
@@ -286,7 +293,7 @@ async def browser_status():
 
 @app.post("/browser/action")
 async def browser_action(cmd: BrowserActionRequest = Body()):
-    """Endpoint for browser action"""
+    """브라우저 자동화 작업을 실행하는 API 엔드포인트"""
     async def execute_with_retry():
         timeout = 60
         try:
@@ -468,21 +475,21 @@ class InitSandboxRequest(BaseModel):
 
 @app.post("/init-sandbox")
 async def init_sandbox(request: InitSandboxRequest):
-    """初始化沙箱环境  # Initialize sandbox environment
+    """샌드박스 환경 초기화
 
-    接收 secrets 并写入到用户的 .secrets 目录下，每个 secret 作为单独的文件  # Receive secrets and write them to the user's .secrets directory, each secret as a separate file
-    - secrets 目录会在 $HOME/.secrets 下创建  # The secrets directory will be created under $HOME/.secrets
-    - 每个 secret 的 key 作为文件名  # Each secret's key is used as the filename
-    - 如果文件已存在且内容不同，会将原文件备份（添加时间戳后缀）  # If the file already exists with different content, the original file will be backed up (with a timestamp suffix)
+    secrets를 받아서 사용자의 .secrets 디렉토리에 각각의 secret을 개별 파일로 저장합니다.
+    - secrets 디렉토리는 $HOME/.secrets 아래에 생성됩니다
+    - 각 secret의 key가 파일명으로 사용됩니다
+    - 파일이 이미 존재하고 내용이 다른 경우, 원본 파일은 타임스탬프를 붙여 백업됩니다
 
     Args:
-        request: InitSandboxRequest containing secrets dictionary
+        request: secrets 딕셔너리를 포함하는 InitSandboxRequest
 
     Returns:
-        Dict with status and processed files info
+        상태와 처리된 파일 정보를 포함하는 Dict
 
     Raises:
-        HTTPException: If HOME environment variable is not set or other errors
+        HTTPException: HOME 환경변수가 설정되지 않았거나 기타 오류 발생시
     """
     try:
         home_dir = os.getenv('HOME')
@@ -579,11 +586,14 @@ async def zip_and_upload(request: ZipAndUploadRequest):
     """
     Zip a directory (excluding node_modules) and upload to S3
     Request body:
+
+    ```
     {
         "directory": "/path/to/directory",
         "upload_url": "https://s3-presigned-url...",
         "project_type": "frontend" | "backend" | "nextjs"
     }
+    ```\
     """
     try:
         # Check if directory exists

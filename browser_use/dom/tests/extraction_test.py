@@ -1,10 +1,16 @@
 import asyncio
+import os
+import sys
 import time
+
+# 프로젝트 루트 경로 추가 (3단계 상위 디렉토리)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
 from browser_use.browser.browser import Browser, BrowserConfig
 from browser_use.browser.context import BrowserContext, BrowserContextConfig
 from browser_use.dom.service import DomService
 from browser_use.utils import time_execution_sync
+
 
 
 def count_string_tokens(text, model='gpt-4o'):

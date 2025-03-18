@@ -9,7 +9,7 @@ from app.models import PartUploadResult, PresignedUrlPart
 logger = logging.getLogger(__name__)
 
 def truncate_text_from_back(text, max_len):
-    '''裁剪并保留最后 max_len 长度的文本 (Truncate and keep the last max_len length of text)'''
+    '''텍스트의 마지막 max_len 길이만큼 잘라서 유지합니다'''
     if len(text) > max_len:
         return '[previous content truncated]...' + text[-max_len:]
     return text
@@ -27,16 +27,16 @@ def ensure_dir_exists(dir_path):
 
 async def upload_to_presigned_url(data, presigned_url, content_type, filename):
     '''
-    Upload data to a presigned URL using aiohttp.
+    aiohttp를 사용하여 presigned URL에 데이터를 업로드합니다.
     
     Args:
-        data: The data to upload (bytes or file-like object)
-        presigned_url: The presigned URL to upload to
-        content_type: The content type of the data
-        filename: The name of the file being uploaded
+        data: 업로드할 데이터 (bytes 또는 파일 객체)
+        presigned_url: 업로드할 presigned URL
+        content_type: 데이터의 컨텐츠 타입
+        filename: 업로드할 파일의 이름
     
     Returns:
-        dict: Response data from the upload
+        dict: 업로드 결과 응답 데이터
     '''
     headers = {
         'Content-Type': content_type,
@@ -156,7 +156,7 @@ async def upload_file_parts(file_path, presigned_urls: List[PresignedUrlPart], p
                     success=False,
                     error=str(e)
                 )
-    
+    ㅈ
     async with aiohttp.ClientSession() as session:
         tasks = [upload_part_with_semaphore(session, url_obj) for url_obj in sorted_urls]
         results = await asyncio.gather(*tasks)

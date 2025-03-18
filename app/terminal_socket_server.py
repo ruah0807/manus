@@ -11,8 +11,8 @@ from app.types.messages import TerminalInputMessage, TerminalOutputMessage, Term
 
 class TerminalSocketServer:
     """
-    WebSocket server for handling terminal connections.
-    This class manages bidirectional communication with terminals through WebSockets.
+    터미널 연결을 처리하는 WebSocket 서버입니다.
+    이 클래스는 WebSocket을 통해 터미널과의 양방향 통신을 관리합니다.
     """
     
     async def handle_connection(self, ws: WebSocket):
